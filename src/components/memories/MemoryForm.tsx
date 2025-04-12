@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,10 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { emotionOptions, Emotion } from "@/lib/types";
 import EmotionTag from "./EmotionTag";
 import { toast } from "sonner";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Download, Save } from "lucide-react";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 const MemoryForm = () => {
   const [title, setTitle] = useState("");
@@ -17,7 +21,9 @@ const MemoryForm = () => {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [selectedEmotions, setSelectedEmotions] = useState<Emotion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPdfLoading, setIsPdfLoading] = useState(false);
   const navigate = useNavigate();
+  const pdfPreviewRef = useRef<HTMLDivElement>(null);
 
   const toggleEmotion = (emotion: Emotion) => {
     const isSelected = selectedEmotions.some(e => e.id === emotion.id);
@@ -62,6 +68,38 @@ const MemoryForm = () => {
       toast.error("Failed to save memory");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const exportToPdf = async () => {
+    if (!pdfPreviewRef.current) return;
+    
+    setIsPdfLoading(true);
+    try {
+      const canvas = await html2canvas(pdfPreviewRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+      });
+      
+      const imgWidth = 210; // A4 width in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      pdf.save(`${title || 'memory'}.pdf`);
+      
+      toast.success("PDF exported successfully!");
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      toast.error("Failed to export PDF");
+    } finally {
+      setIsPdfLoading(false);
     }
   };
 
@@ -131,9 +169,77 @@ const MemoryForm = () => {
             </div>
           </div>
           
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Saving..." : "Save Memory"}
-          </Button>
+          <div className="flex gap-3">
+            <Button type="submit" className="flex-1" disabled={isLoading}>
+              <Save className="mr-2 h-4 w-4" />
+              {isLoading ? "Saving..." : "Save Memory"}
+            </Button>
+            
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" type="button" className="flex-1">
+                  <Download className="mr-2 h-4 w-4" />
+                  Export as PDF
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-full sm:max-w-xl">
+                <SheetHeader>
+                  <SheetTitle>Memory Preview</SheetTitle>
+                  <SheetDescription>
+                    Review your memory before exporting it as a PDF.
+                  </SheetDescription>
+                </SheetHeader>
+                
+                <div className="mt-6 mb-4 overflow-y-auto max-h-[70vh]">
+                  <div ref={pdfPreviewRef} className="bg-white p-8 rounded-lg shadow">
+                    <div className="mb-6 border-b pb-4">
+                      <h2 className="text-2xl font-bold mb-1">{title || "Untitled Memory"}</h2>
+                      <p className="text-muted-foreground">{new Date(date).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}</p>
+                    </div>
+                    
+                    {imageUrl && (
+                      <div className="mb-6">
+                        <img 
+                          src={imageUrl} 
+                          alt={title} 
+                          className="w-full max-h-60 object-contain rounded-md"
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://placehold.co/600x400?text=Image+Not+Found';
+                          }}
+                        />
+                      </div>
+                    )}
+                    
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold mb-2">Description</h3>
+                      <p className="whitespace-pre-line">{description || "No description provided."}</p>
+                    </div>
+                    
+                    {selectedEmotions.length > 0 && (
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">Emotions</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedEmotions.map((emotion) => (
+                            <EmotionTag key={emotion.id} emotion={emotion} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="mt-6">
+                  <Button onClick={exportToPdf} disabled={isPdfLoading} className="w-full">
+                    {isPdfLoading ? "Generating PDF..." : "Download PDF"}
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </form>
       </CardContent>
       <CardFooter className="flex justify-between"></CardFooter>
