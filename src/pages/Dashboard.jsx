@@ -1,6 +1,8 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import Navbar from "../components/layout/Navbar";
+import MemoryCard from "../components/memories/MemoryCard";
 import Button from "../components/Button";
 import Input from "../components/Input";
 
@@ -33,32 +35,9 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="border-b bg-white">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <Link to="/" className="flex items-center gap-2">
-            <span className="text-xl font-bold">EmotionEchoes</span>
-          </Link>
-          
-          <nav className="flex items-center gap-4">
-            <Button>
-              <Link to="/new-memory" className="text-white">New Memory</Link>
-            </Button>
-            <button 
-              onClick={() => {
-                localStorage.removeItem("isAuthenticated");
-                localStorage.removeItem("user");
-                alert("Logged out successfully");
-                navigate("/");
-              }}
-              className="text-gray-600 hover:text-gray-900"
-            >
-              Log out
-            </button>
-          </nav>
-        </div>
-      </header>
+      <Navbar />
       
-      <main className="flex-1 container mx-auto py-8 px-4">
+      <main className="flex-1 container mx-auto py-8 px-4 md:px-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-bold">Your Memories</h1>
@@ -71,7 +50,7 @@ const Dashboard = () => {
             <div className="relative w-full md:w-64">
               <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.3-4.3" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
               <Input
                 placeholder="Search memories..."
@@ -81,11 +60,11 @@ const Dashboard = () => {
               />
             </div>
             <Button>
-              <Link to="/new-memory" className="text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <Link to="/new-memory" className="flex items-center text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10" />
-                  <path d="M12 8v8" />
-                  <path d="M8 12h8" />
+                  <line x1="12" y1="8" x2="12" y2="16" />
+                  <line x1="8" y1="12" x2="16" y2="12" />
                 </svg>
                 New Memory
               </Link>
@@ -102,11 +81,11 @@ const Dashboard = () => {
                   You haven't added any memories yet. Create your first one!
                 </p>
                 <Button>
-                  <Link to="/new-memory" className="text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <Link to="/new-memory" className="flex items-center text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10" />
-                      <path d="M12 8v8" />
-                      <path d="M8 12h8" />
+                      <line x1="12" y1="8" x2="12" y2="16" />
+                      <line x1="8" y1="12" x2="16" y2="12" />
                     </svg>
                     Create First Memory
                   </Link>
@@ -124,30 +103,14 @@ const Dashboard = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredMemories.map((memory) => (
-              <div key={memory.id} className="bg-white rounded-lg shadow-md overflow-hidden border">
-                <div className="p-4">
-                  <h3 className="text-lg font-semibold">{memory.title}</h3>
-                  <p className="text-gray-600 text-sm mt-1">{new Date(memory.createdAt).toLocaleDateString()}</p>
-                  <p className="mt-2 line-clamp-3">{memory.description}</p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {memory.emotions.map((emotion) => (
-                      <span 
-                        key={emotion.id} 
-                        className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800"
-                      >
-                        {emotion.name}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              <MemoryCard key={memory.id} memory={memory} />
             ))}
           </div>
         )}
       </main>
       
       <footer className="py-6 border-t">
-        <div className="container mx-auto flex justify-between items-center px-4">
+        <div className="container mx-auto flex justify-between items-center px-4 md:px-6">
           <p className="text-sm text-gray-600">
             © 2023 EmotionEchoes
           </p>
